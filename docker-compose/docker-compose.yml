@@ -1,0 +1,41 @@
+version: '3'
+services:
+  flask:
+    # We build the image here in docker-compose, but we could as easily build and publish an image, then use that image here. 
+    build: .
+    depends_on:
+      - mysql
+    networks:
+      - backend
+      - frontend
+    ports:
+      - "5000:5000"
+    environment:      # Ideally we wont include these variables in docker-compose.yml, as we want to check this into SCM. Two alternates would be to use a .env file,  or pass these in via the command line.Or use secrets manager..
+      DBUSER: 'foodbuser'
+      DBPASSWORD: 'abc'
+      DBHOST: 'mysql'
+      DATABASE: 'foodb'
+      DBPORT: '3306'
+    #command: ["/src/wait-for-mysql.sh", ${DBHOST}, "3306", ${DBPASSWORD}, ${DBUSER}, "--", "python", "app.py"]
+    command: ["python", "take_home.py"]
+  mysql:
+    image: mysql:5.7     # We are using verson 5.7 here to avoid issues with version 8 password options
+    #Alternatively, we can use command: --default-authentication-plugin=mysql_native_password to bypass this and run 8
+    ports:
+      - "3306:3306"
+    networks:
+      - backend
+    environment:
+      - MYSQL_USER=foodbuser
+      - MYSQL_RANDOM_ROOT_PASSWORD
+      - MYSQL_PASSWORD=abc
+      - MYSQL_DATABASE=foodb
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - mysql:/var/lib/mysql
+
+networks:
+  backend:
+  frontend:
+volumes:
+  mysql:
